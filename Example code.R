@@ -36,6 +36,7 @@ xx_tracks$name #This is the list that would be scored
 library(ggplot2)
 library(viridis)
 library(Kmedians)
+library(tidyverse)
 
 albums.dat<-read.csv("C:/Users/copej/OneDrive/Desktop/Album rater/REM_example.csv",header=F)
 albums.list<-list()
@@ -66,15 +67,20 @@ rank.wt<-c(0.4,0.1,0.1,0.2,0.2)
 rank.score<-colSums(all.ranks*rank.wt)
 final.rank<-rank(rank.score,ties.method= "min")
 
+
+#Make results table
+rank.table<-data.frame(t(all.ranks))
+rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),rank.table,Rank_score=rank.score,Final_rank=final.rank)
+colnames(rank.table)<-c("Artist","Album","Median","10s","8+","% 10s","% 8+","Rank score","Final rank")
+rank.table%>%
+  arrange(`Final rank`)
+
+#Make ggplot dataframe
 #Clusters
 kmeds<-Kmedians(t(all.ranks))
 cluster.col<-viridis(max(kmeds$bestresult$cluster))
-
-#Make ggplot dataframe
 rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster)))
 rownames(rank.plot.dat)<-albums.list$Album
-
-
 
 ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
   geom_point(size=4)+
@@ -91,127 +97,6 @@ ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
 
 
 
-library(shiny)
-library(bslib)
-library(DT)
-library(ggplot2)
-library(readr)
 
-ui <- page_sidebar(
-  title = "CSV Data Explorer",
-  sidebar = sidebar(
-    fileInput("file", "Choose CSV File",
-              accept = c(".csv", ".CSV")),
-    
-    conditionalPanel(
-      condition = "output.fileUploaded",
-      br(),
-      selectInput("x_var", "X Variable:", choices = NULL),
-      selectInput("y_var", "Y Variable:", choices = NULL),
-      selectInput("plot_type", "Plot Type:",
-                  choices = list("Scatter Plot" = "scatter",
-                                 "Line Plot" = "line",
-                                 "Bar Plot" = "bar",
-                                 "Histogram" = "histogram"))
-    )
-  ),
-  
-  layout_columns(
-    card(
-      card_header("Data Table"),
-      DT::dataTableOutput("table")
-    ),
-    
-    card(
-      card_header("Data Visualization"),
-      plotOutput("plot", height = "400px")
-    )
-  )
-)
-
-server <- function(input, output, session) {
-  # Reactive value to store the uploaded data
-  data <- reactive({
-    req(input$file)
-    
-    tryCatch({
-      df <- read_csv(input$file$datapath)
-      return(df)
-    }, error = function(e) {
-      showNotification("Error reading CSV file", type = "error")
-      return(NULL)
-    })
-  })
-  
-  # Update variable choices when data is loaded
-  observe({
-    req(data())
-    numeric_vars <- names(select_if(data(), is.numeric))
-    all_vars <- names(data())
-    
-    updateSelectInput(session, "x_var", choices = all_vars)
-    updateSelectInput(session, "y_var", choices = numeric_vars)
-  })
-  
-  # Output to check if file is uploaded (for conditional panel)
-  output$fileUploaded <- reactive({
-    return(!is.null(input$file))
-  })
-  outputOptions(output, "fileUploaded", suspendWhenHidden = FALSE)
-  
-  # Render data table
-  output$table <- DT::renderDataTable({
-    req(data())
-    DT::datatable(data(), 
-                  options = list(scrollX = TRUE, pageLength = 10),
-                  class = 'cell-border stripe')
-  })
-  
-  # Render plot
-  output$plot <- renderPlot({
-    req(data(), input$x_var)
-    
-    df <- data()
-    
-    if (input$plot_type == "histogram") {
-      # For histogram, only use x variable
-      req(is.numeric(df[[input$x_var]]))
-      ggplot(df, aes_string(x = input$x_var)) +
-        geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
-        theme_minimal() +
-        labs(title = paste("Histogram of", input$x_var))
-      
-    } else {
-      # For other plots, need both x and y variables
-      req(input$y_var)
-      
-      if (input$plot_type == "scatter") {
-        ggplot(df, aes_string(x = input$x_var, y = input$y_var)) +
-          geom_point(alpha = 0.6, color = "steelblue") +
-          theme_minimal() +
-          labs(title = paste("Scatter Plot:", input$y_var, "vs", input$x_var))
-        
-      } else if (input$plot_type == "line") {
-        ggplot(df, aes_string(x = input$x_var, y = input$y_var)) +
-          geom_line(color = "steelblue", size = 1) +
-          geom_point(color = "darkblue", alpha = 0.6) +
-          theme_minimal() +
-          labs(title = paste("Line Plot:", input$y_var, "vs", input$x_var))
-        
-      } else if (input$plot_type == "bar") {
-        # For bar plot, aggregate data by x variable
-        df_agg <- df %>%
-          group_by(!!sym(input$x_var)) %>%
-          summarise(value = mean(!!sym(input$y_var), na.rm = TRUE), .groups = 'drop')
-        
-        ggplot(df_agg, aes(x = !!sym(input$x_var), y = value)) +
-          geom_col(fill = "steelblue", alpha = 0.7) +
-          theme_minimal() +
-          labs(title = paste("Bar Plot: Mean", input$y_var, "by", input$x_var),
-               y = paste("Mean", input$y_var))
-      }
-    }
-  })
-}
 
 shinyApp(ui = ui, server = server)
