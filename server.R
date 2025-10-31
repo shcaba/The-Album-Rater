@@ -147,16 +147,23 @@ function(input, output, session) {
     final.rank<-finalranks.out()
     
     #Cluster analysis
-    kmeds<-Kmedians(t(all.ranks))
-    cluster.col<-viridis(max(kmeds$bestresult$cluster))
+    #browser()
+    if(length(final.rank)>10)
+    {
+      kmeds<-Kmedians(t(all.ranks),nclust=1:length(final.rank)-1)
+      cluster.col<-viridis(max(kmeds$bestresult$cluster))
+      plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
+    }
+    else{plot.cols<-"blue"}
     
-    rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster)))
+    rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=plot.cols)
     rownames(rank.plot.dat)<-albums.list$Album
+    max.ax<-max(c(rank.plot.dat$Final.rank,rank.plot.dat$Rank.score))
     
     ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
       geom_point(size=4)+
-      ylim(0,NA)+
-      xlim(0,NA)+
+      ylim(0,max.ax)+
+      xlim(0,max.ax)+
       geom_abline(slope=1,intercept = 0)+
       theme_bw()+
       xlab("Final rank")+
