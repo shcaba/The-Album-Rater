@@ -159,8 +159,8 @@ function(input, output, session) {
     rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=plot.cols)
     rownames(rank.plot.dat)<-albums.list$Album
     max.ax<-max(c(rank.plot.dat$Final.rank,rank.plot.dat$Rank.score))
-    
-    ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
+    #browser()
+    p<-ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
       geom_point(size=4)+
       ylim(0,max.ax)+
       xlim(0,max.ax)+
@@ -169,5 +169,9 @@ function(input, output, session) {
       xlab("Final rank")+
       ylab("Rank score")+
       theme(legend.position = "none")
+    
+    style(p, text = names(final.rank))
+    p
+      
   })
 }

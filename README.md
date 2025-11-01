@@ -2,16 +2,17 @@
 An objective way to rank albums using your subjective track ratings.
 
 Rate Albums song by song (subjective ratings) using the following rating rubric:
-10 = Stone cold classic
-9 = Excellent
-8= Super solid
-7- Good
-6- Fair
-5- Moderatley listenable
-4 - poor
-3 - terrible
-2 - disgusting
-1 - complete rubbish
+
+* 10 = Stone cold classic
+* 9 = Excellent
+* 8 = Super solid
+* 7- Good
+* 6- Fair
+* 5- Moderatley listenable
+* 4 - poor
+* 3 - terrible
+* 2 - disgusting
+* 1 - complete rubbish
 
 Provide your ratings use the example csv file.
 Upload your song scores and have the app calcualte your album rankings using the following metrics:
