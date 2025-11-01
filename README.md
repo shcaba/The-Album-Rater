@@ -9,10 +9,10 @@ Rate Albums song by song (subjective ratings) using the following rating rubric:
 * 7- Good
 * 6- Fair
 * 5- Moderatley listenable
-* 4 - poor
-* 3 - terrible
-* 2 - disgusting
-* 1 - complete rubbish
+* 4 - Poor
+* 3 - Terrible
+* 2 - Disgusting
+* 1 - Complete rubbish
 
 Provide your ratings use the example csv file.
 Upload your song scores and have the app calcualte your album rankings using the following metrics:
