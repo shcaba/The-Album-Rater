@@ -29,6 +29,10 @@ sidebarLayout(
         downloadButton('download_table',"Download the album rankings"),
         br(),
         br(),
+        tableOutput("artist_table"),
+        downloadButton('download_artist_table',"Download the artist metrics"),
+        br(),
+        br(),
         h4("Final ranking compared to the ranking metric."),
         h5("Color indicate the clusterings based on each ranking metric, not the overall final ranking"),
         plotlyOutput("Comp_rank_plot")

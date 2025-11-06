@@ -8,7 +8,7 @@ function(input, output, session) {
   # Reactive value to store the uploaded data
   data <- reactive({
     req(input$file)
-    #browser()
+    
     tryCatch({
       df <- data.frame(read_csv(input$file$datapath,col_names = FALSE))
       return(df)
@@ -48,24 +48,48 @@ function(input, output, session) {
   })
   
   #Calculate ranking scores and rankings
-  allranks.out<-reactive({
+  all.metrics.out<-reactive({
     req(albums.list.out())
     albums.list<-albums.list.out()
+    
     #Caluculate scores
     medians<-apply(albums.list$Tracks,2,median,na.rm=TRUE)
     tens<-colSums(albums.list$Tracks==10,na.rm=TRUE)
     eigh2ten<-colSums(albums.list$Tracks>=8,na.rm=TRUE)
     numtracks<-colSums(albums.list$Tracks>0,na.rm=TRUE)
-    tens_per<-tens/numtracks
-    eigh2ten_per<-eigh2ten/numtracks
+    tens_per<-round(tens/numtracks,2)
+    eigh2ten_per<-round(eigh2ten/numtracks,2)
+    all.metrics<-rbind(medians,tens,eigh2ten,tens_per,eigh2ten_per)
+    rownames(all.metrics)<-c("Medians","Tens","8plus","Tens_pct","8plus_pct")
+    colnames(all.metrics)<-albums.list$Album
+    all.metrics
+  })    
+  
+    allranks.out<-reactive({
+    req(albums.list.out(),all.metrics.out())
+
+    albums.list<-albums.list.out()
+#    #Caluculate scores
+#    medians<-apply(albums.list$Tracks,2,median,na.rm=TRUE)
+#    tens<-colSums(albums.list$Tracks==10,na.rm=TRUE)
+#    eigh2ten<-colSums(albums.list$Tracks>=8,na.rm=TRUE)
+#    numtracks<-colSums(albums.list$Tracks>0,na.rm=TRUE)
+#    tens_per<-tens/numtracks
+#    eigh2ten_per<-eigh2ten/numtracks
     
     
     #Calcualte ranks
-    medians.rank<-rank(-medians,ties.method= "min")
-    tens.rank<-rank(-tens,ties.method= "min")
-    eigh2ten.rank<-rank(-eigh2ten,ties.method= "min")
-    tens_per.rank<-rank(-tens_per,ties.method= "min")
-    eigh2ten_per.rank<-rank(-eigh2ten_per,ties.method= "min")
+#    medians.rank<-rank(-medians,ties.method= "min")
+#    tens.rank<-rank(-tens,ties.method= "min")
+#    eigh2ten.rank<-rank(-eigh2ten,ties.method= "min")
+#    tens_per.rank<-rank(-tens_per,ties.method= "min")
+#    eigh2ten_per.rank<-rank(-eigh2ten_per,ties.method= "min")
+    medians.rank<-rank(-all.metrics.out()[1,],ties.method= "min")
+    tens.rank<-rank(-all.metrics.out()[2,],ties.method= "min")
+    eigh2ten.rank<-rank(-all.metrics.out()[3,],ties.method= "min")
+    tens_per.rank<-rank(-all.metrics.out()[4,],ties.method= "min")
+    eigh2ten_per.rank<-rank(-all.metrics.out()[5,],ties.method= "min")
+    
     all.ranks<-rbind(medians.rank,tens.rank,eigh2ten.rank,tens_per.rank,eigh2ten_per.rank)
     colnames(all.ranks)<-albums.list$Album
     all.ranks
@@ -86,25 +110,24 @@ function(input, output, session) {
     final.rank
   })
   
-  
-  
   rank.table<-reactive({
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
     albums.list<-albums.list.out()
+    all.metrics<-all.metrics.out()
     all.ranks<-allranks.out()
     rank.score<-rank_score.out()
     final.rank<-finalranks.out()
     
-    rank.table<-data.frame(t(all.ranks))
+    rank.table<-data.frame(cbind(t(all.ranks),t(all.metrics)))
     rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=final.rank,Rank_score=rank.score,rank.table)
-    colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Median","10s","8+","% 10s","% 8+")
+    colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Median rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Median","10s","8+","% 10s","% 8+")
     rank.table%>%
       arrange(`Final rank`)
     rank.table
   })
   
 
-  # Render data table
+  # Render ranking table
   output$ranking_table <- render_gt({
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
     #albums.list<-albums.list.out()
@@ -123,7 +146,7 @@ function(input, output, session) {
         title = "Album rankings and rankings metrics",
         subtitle = ""
       ) %>%
-      data_color(columns = c(3:9), method = "auto", palette = "viridis", reverse=TRUE) |>
+      data_color(columns = c(3:14), method = "auto", palette = "viridis", reverse=TRUE) |>
       tab_style(style = list(cell_text(weight = "bold")),
                 locations = cells_body(columns = c(Album,`Final rank`))) %>%
       opt_interactive(use_search = TRUE,
@@ -136,21 +159,69 @@ function(input, output, session) {
     content = function(fname){
       write.csv(rank.table(), fname)
     })
+
+
+#Create artist summary
+  artist.summary.out<-reactive({
+    req(albums.list.out())
+    albums.list<-albums.list.out()
+
+    score.out.list<-mapply(function(x) data.frame(Track_score=albums.list$Tracks[,x],Artist=albums.list$Artist[1,x]),x=1:length(albums.list$Artist),SIMPLIFY=FALSE)
+    score.out.df<-do.call(rbind, score.out.list)
+    summary.out<-score.out.df %>%
+      group_by(Artist) %>%
+      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE),2),Median=median(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
+    summary.out
+  })
+
+  # Render artist summary table
+  output$artist_table <- render_gt({
+    req(artist.summary.out())
+    #albums.list<-albums.list.out()
+    #all.ranks<-allranks.out()
+    #rank.score<-rank_score.out()
+    #final.rank<-finalranks.out()
+    
+    #rank.table<-data.frame(t(all.ranks))
+    #rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=final.rank,Rank_score=rank.score,rank.table)
+    #colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Median","10s","8+","% 10s","% 8+")
+    #rank.table()%>%
+    #  arrange(`Final rank`)
+    
+    gt(artist.summary.out()) %>%
+      tab_header(
+        title = "Artist summary",
+        subtitle = ""
+      ) %>%
+      data_color(columns = c(2:10), method = "auto", palette = "viridis", reverse=TRUE) |>
+      tab_style(style = list(cell_text(weight = "bold")),
+                locations = cells_body(columns = c(Artist,Ntracks))) %>%
+      opt_interactive(use_search = TRUE,
+                      use_highlight = TRUE,
+                      use_page_size_select = TRUE)
+  })
   
+  output$download_artist_table <- downloadHandler(
+    filename = function(){"artist_rankings.csv"}, 
+    content = function(fname){
+      write.csv(rank.table(), fname)
+    })
+  
+    
   # Render plot
   output$Comp_rank_plot <- renderPlotly({
-    #browser()
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
     albums.list<-albums.list.out()
+    all.metrics<-all.metrics.out()
     all.ranks<-allranks.out()
     rank.score<-rank_score.out()
     final.rank<-finalranks.out()
     
     #Cluster analysis
-    #browser()
-    if(length(final.rank)>10)
+   if(length(final.rank)>5)
     {
-      kmeds<-Kmedians(t(all.ranks),nclust=1:length(final.rank)-1)
+      kmeds<-Kmedians(t(all.metrics),nclust=1:length(final.rank)-1)
+      #kmeds<-Kmedians(t(all.metrics),nclust=1:12)
       cluster.col<-viridis(max(kmeds$bestresult$cluster))
       plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
     }
@@ -159,7 +230,7 @@ function(input, output, session) {
     rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=plot.cols)
     rownames(rank.plot.dat)<-albums.list$Album
     max.ax<-max(c(rank.plot.dat$Final.rank,rank.plot.dat$Rank.score))
-    #browser()
+    
     p<-ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
       geom_point(size=4)+
       ylim(0,max.ax)+
