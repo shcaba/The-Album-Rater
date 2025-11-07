@@ -5,8 +5,9 @@ library(tidyverse)
 library(gt)
 
 function(input, output, session) {
-  # Reactive value to store the uploaded data
-  data <- reactive({
+  observeEvent(input$run_rankings,{
+    # Reactive value to store the uploaded data
+    data <- reactive({
     req(input$file)
     
     tryCatch({
@@ -97,7 +98,7 @@ function(input, output, session) {
   
   rank_score.out<-reactive({
     req(allranks.out())
-    rank.wt<-c(0.4,0.1,0.1,0.2,0.2)
+    rank.wt<-c(input$wtMedian,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
     rank.score<-colSums(allranks.out()*rank.wt)
     rank.score
   })
@@ -170,7 +171,7 @@ function(input, output, session) {
     score.out.df<-do.call(rbind, score.out.list)
     summary.out<-score.out.df %>%
       group_by(Artist) %>%
-      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE),2),Median=median(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
+      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE)),Median=median(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
     summary.out
   })
 
@@ -216,14 +217,17 @@ function(input, output, session) {
     all.ranks<-allranks.out()
     rank.score<-rank_score.out()
     final.rank<-finalranks.out()
-    
+    #browser()
     #Cluster analysis
-   if(length(final.rank)>5)
+   if(length(final.rank)>input$clust.in & input$clust.in>1)
     {
-      kmeds<-Kmedians(t(all.metrics),nclust=1:length(final.rank)-1)
-      #kmeds<-Kmedians(t(all.metrics),nclust=1:12)
-      cluster.col<-viridis(max(kmeds$bestresult$cluster))
-      plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
+      
+      #kmeds<-Kmedians(t(all.metrics),nclust=1:length(final.rank)-1)
+      #cluster.col<-viridis(max(kmeds$bestresult$cluster))
+      #plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
+     kmeds<-Kmedians(t(all.metrics),nclust=1:input$clust.in)
+     cluster.col<-viridis(input$clust.in)
+     plot.cols<-mapply(function(x) cluster.col[kmeds$allresults[[input$clust.in]]$cluster[x]],x=1:length(kmeds$allresults[[input$clust.in]]$cluster))
     }
     else{plot.cols<-"blue"}
     
@@ -245,4 +249,5 @@ function(input, output, session) {
     p
       
   })
+ })
 }
