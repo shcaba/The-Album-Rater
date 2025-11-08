@@ -3,14 +3,22 @@ library(bslib)
 library(DT)
 library(readr)
 library(plotly)
+library(shinyWidgets)
 
-fluidPage(
+ui <- function(request) {
+  shinyUI(fluidPage(
+  
+  tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+                    color: #ffffff")),
+  
+  #setBackgroundImage(src = "album.jpg"),
+  setBackgroundImage(src = "https://hediscount.ru/product/276214062134"), 
+  
   column(width = 12, class = "well",
-titlePanel("The Album Rater"),
-h4(p("This tool ranks albums from your individual song ratings.")),
-h4(p("This is an objective ranking of albums taken from your subjective song ratings.")),
-h4(p("This tool ranks albums from your individual song ratings.")),
-
+  titlePanel("The Album Rater"),
+  h4(p("This tool ranks albums from your individual song ratings.")),
+  h4(p("This is an objective album ranking taken from subjective song ratings.")),
+  
 sidebarLayout(
   sidebarPanel(
     h3("Choose file with song ratings."),
@@ -40,7 +48,7 @@ sidebarLayout(
     actionButton("run_rankings", strong("Run Rankings"),
                  width = "100%",
                  icon("circle-play"),
-                 style = "font-size:120%;border:2px solid;color:#FFFFFF;background:#5D9741"
+                 style = "font-size:120%;border:2px solid;color:#FFFFFF;background:#0388fc"
     )
   ),
 
@@ -71,3 +79,5 @@ sidebarLayout(
   )
  )
 )
+)
+}

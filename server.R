@@ -229,13 +229,14 @@ function(input, output, session) {
      cluster.col<-viridis(input$clust.in)
      plot.cols<-mapply(function(x) cluster.col[kmeds$allresults[[input$clust.in]]$cluster[x]],x=1:length(kmeds$allresults[[input$clust.in]]$cluster))
     }
-    else{plot.cols<-"blue"}
+    else{plot.cols<-"#0388fc"}
     
-    rank.plot.dat<-data.frame("Final rank"=final.rank,"Rank score"=rank.score,Ptcol=plot.cols)
-    rownames(rank.plot.dat)<-albums.list$Album
+    rank.plot.dat<-data.frame("Album"=t(albums.list$Album),"Final rank"=final.rank,"Rank score"=rank.score,Ptcol=plot.cols)
+    colnames(rank.plot.dat)[1]="Album"
+    #rownames(rank.plot.dat)<-albums.list$Album
     max.ax<-max(c(rank.plot.dat$Final.rank,rank.plot.dat$Rank.score))
     
-    p<-ggplot(rank.plot.dat,aes(Final.rank,Rank.score,col=Ptcol))+
+    p<-ggplot(rank.plot.dat,aes(x=Final.rank,y=Rank.score,fill=plot.cols,album=Album))+
       geom_point(size=4)+
       ylim(0,max.ax)+
       xlim(0,max.ax)+
@@ -246,6 +247,7 @@ function(input, output, session) {
       theme(legend.position = "none")
     
     style(p, text = names(final.rank))
+    ggplotly(p,tooltip = c("x", "y", "album"))
     p
       
   })
