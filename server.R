@@ -7,6 +7,17 @@ require(shinycssloaders)
 #require(wesanderson)
 
 function(input, output, session) {
+  output$download_csv <- downloadHandler(
+    filename = function() {
+      "Example_rankings.csv"
+    },
+    content = function(file) {
+      # Copy the existing file from app directory to download location
+      file.copy("Ex_rankings.csv", file)
+    }
+  )  
+  
+  
   observeEvent(input$run_rankings,{
     # Reactive value to store the uploaded data
     data <- reactive({
@@ -169,7 +180,6 @@ function(input, output, session) {
   artist.summary.out<-reactive({
     req(albums.list.out())
     albums.list<-albums.list.out()
-
     score.out.list<-mapply(function(x) data.frame(Track_score=albums.list$Tracks[,x],Artist=albums.list$Artist[1,x]),x=1:length(albums.list$Artist),SIMPLIFY=FALSE)
     score.out.df<-do.call(rbind, score.out.list)
     summary.out<-score.out.df %>%
@@ -181,7 +191,6 @@ function(input, output, session) {
   # Render artist summary table
   output$artist_table <- render_gt({
     req(artist.summary.out())
-    
     #albums.list<-albums.list.out()
     #all.ranks<-allranks.out()
     #rank.score<-rank_score.out()

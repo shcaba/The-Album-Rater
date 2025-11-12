@@ -1,7 +1,24 @@
 # The-Album-Rater
 An objective way to rank albums using your subjective track ratings.
 
-Rate Albums song by song (subjective ratings) using the following rating rubric:
+# Installing libraries
+
+```R
+
+Use the below code to check to make sure you have the needed libraries:
+
+packages<-c("shiny","ggplot2","DT","bslib","readr",
+"shinyWidgets","shinycssloaders","viridis","Kmedians","tidyverse","gt")
+
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages], dependencies = TRUE)
+}
+
+```
+
+# Rating songs
+Rate albums song by song (subjective ratings) using the following rating rubric:
 
 * 10 = Stone cold classic
 * 9 = Excellent
@@ -14,8 +31,9 @@ Rate Albums song by song (subjective ratings) using the following rating rubric:
 * 2 - Disgusting
 * 1 - Complete rubbish
 
-Provide your ratings use the example csv file.
-Upload your song scores and have the app calcualte your album rankings using the following metrics:
+Provide your ratings (see the download link for the "Ex_rankings.csv"" file, or just open in from repo you have downloaded as a template) as a csv file.
+
+Upload your song scores and have the app calculate your album rankings using the following metrics:
 * Median song score (central album song rating)
 * Number of songs with score of 10 (number of stone cold classics)
 * Number of songs with scores of 8 and above (number of exceptional songs)
@@ -25,16 +43,18 @@ Upload your song scores and have the app calcualte your album rankings using the
 The last two metrics based on percentages adjusts for albums that have more songs (e.g., double-albums).
 
 Rankings of each album are determined on each of the above matrics.
-The overall ranking metric is the weighted average of the above 5 metric rankings with the following default weighting: 0.4,0.2,0.05,0.3,0.1
+The overall ranking metric is the weighted average of the above 5 metric rankings with the following default weighting: 0.4,0.25,0.05,0.25,0.05
 This weighting upweights stone cold classics and overall quality of the album based on percentages.
 
-The final ranking is based on the overall ranking metrics.
+The final ranking is based on the overall weighted ranking metrics.
 
 # Ranking outputs
 A table of each metric ranking, the ranking score and overall rankings are provided in a sortable table.
+A second table provides a summary score for each band or artist submitted.
+
 A comparison plot is also provided comparing the ovearll ranking with the ranking metrics. If this follows the one-to-one line, then there is a clear differentitaion among the compared albums.
 If there are major deviations from the one-to-one line, then it may show the albums are more similarly ranked than the final rankings show.
-A cluster analysis is performed using the Kmedians package to look for clustering of ranks among the 5 metrics. Point colors show the distinct clusters found via the k-medians cluster appraoch. 
+A cluster analysis is performed using the Kmedians package to look for clustering of ranks among the 5 metrics. Point colors show the user defined number of distinct clusters found via the k-medians cluster approach. 
 
 # Additional explorations
 A variety of other explorations can be made with the output:

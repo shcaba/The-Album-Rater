@@ -8,7 +8,6 @@ require(shinycssloaders)
 
 ui <- function(request) {
   shinyUI(fluidPage(
-  
   tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
                     color: #ffffff")),
   
@@ -19,25 +18,31 @@ ui <- function(request) {
   titlePanel("The Album Rater"),
   h4(p("This tool ranks albums from your individual song ratings.")),
   h4(p("This is an objective album ranking taken from subjective song ratings.")),
+  downloadLink(
+    "download_csv",
+    "Download example ratings file",
+    class = "btn btn-secondary mb-3"
+  ),
   
 sidebarLayout(
   sidebarPanel(
+    width=2,
     h3("Choose file with song ratings."),
+    
     fileInput("file", "CSV File",
               accept = c(".csv", ".CSV")),
-    width=2,
-    br(),
+    
     h3("Choose the ranking weights"),
     fluidRow(
       column(width = 6, numericInput("wtMedian", "Median score", value = 0.4, min = 0, max = 1, step = 0.001))
     ),
     fluidRow(
-      column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.2, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.25, min = 0, max = 1, step = 0.001)),
       column(width = 6, numericInput("wt8plus", "Number >= 8",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
     fluidRow(
       column(width = 6, numericInput("wtper10", "% 10s",  value = 0.25, min = 0, max = 1, step = 0.001)),
-      column(width = 6, numericInput("wtper8plus", "% >=8",  value = 0.1, min = 0, max = 1, step = 0.00001))
+      column(width = 6, numericInput("wtper8plus", "% >=8",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
     
     br(),
