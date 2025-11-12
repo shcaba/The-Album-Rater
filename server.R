@@ -1,8 +1,10 @@
-library(ggplot2)
-library(viridis)
-library(Kmedians)
-library(tidyverse)
-library(gt)
+require(ggplot2)
+require(viridis)
+require(Kmedians)
+require(tidyverse)
+require(gt)
+require(shinycssloaders)
+#require(wesanderson)
 
 function(input, output, session) {
   observeEvent(input$run_rankings,{
@@ -99,6 +101,7 @@ function(input, output, session) {
   rank_score.out<-reactive({
     req(allranks.out())
     rank.wt<-c(input$wtMedian,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
+    rank.wt<-rank.wt/sum(rank.wt)
     rank.score<-colSums(allranks.out()*rank.wt)
     rank.score
   })
@@ -127,7 +130,6 @@ function(input, output, session) {
     rank.table
   })
   
-
   # Render ranking table
   output$ranking_table <- render_gt({
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
@@ -142,7 +144,7 @@ function(input, output, session) {
     #rank.table()%>%
     #  arrange(`Final rank`)
     
-    gt(rank.table()) %>%
+    gt.rank.table<-gt(rank.table()) %>%
       tab_header(
         title = "Album rankings and rankings metrics",
         subtitle = ""
@@ -153,6 +155,7 @@ function(input, output, session) {
       opt_interactive(use_search = TRUE,
                       use_highlight = TRUE,
                       use_page_size_select = TRUE)
+    gt.rank.table
   })
   
   output$download_table <- downloadHandler(
@@ -178,6 +181,7 @@ function(input, output, session) {
   # Render artist summary table
   output$artist_table <- render_gt({
     req(artist.summary.out())
+    
     #albums.list<-albums.list.out()
     #all.ranks<-allranks.out()
     #rank.score<-rank_score.out()
@@ -222,10 +226,10 @@ function(input, output, session) {
    if(length(final.rank)>input$clust.in & input$clust.in>1)
     {
       
-      #kmeds<-Kmedians(t(all.metrics),nclust=1:length(final.rank)-1)
-      #cluster.col<-viridis(max(kmeds$bestresult$cluster))
-      #plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
-     kmeds<-Kmedians(t(all.metrics),nclust=1:input$clust.in)
+    #  kmeds<-Kmedians(t(all.metrics),nclust=1:length(final.rank)-1)
+    #  cluster.col<-viridis(max(kmeds$bestresult$cluster))
+    #  plot.cols<-mapply(function(x) cluster.col[kmeds$bestresult$cluster[x]],x=1:length(kmeds$bestresult$cluster))
+     kmeds<-Kmedians(t(all.metrics[c(1,4,5),]),nclust=1:input$clust.in)
      cluster.col<-viridis(input$clust.in)
      plot.cols<-mapply(function(x) cluster.col[kmeds$allresults[[input$clust.in]]$cluster[x]],x=1:length(kmeds$allresults[[input$clust.in]]$cluster))
     }
@@ -235,7 +239,7 @@ function(input, output, session) {
     colnames(rank.plot.dat)[1]="Album"
     #rownames(rank.plot.dat)<-albums.list$Album
     max.ax<-max(c(rank.plot.dat$Final.rank,rank.plot.dat$Rank.score))
-    
+
     p<-ggplot(rank.plot.dat,aes(x=Final.rank,y=Rank.score,fill=plot.cols,album=Album))+
       geom_point(size=4)+
       ylim(0,max.ax)+
@@ -249,7 +253,6 @@ function(input, output, session) {
     style(p, text = names(final.rank))
     ggplotly(p,tooltip = c("x", "y", "album"))
     p
-      
+    })
   })
- })
 }

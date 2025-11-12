@@ -25,7 +25,7 @@ Upload your song scores and have the app calcualte your album rankings using the
 The last two metrics based on percentages adjusts for albums that have more songs (e.g., double-albums).
 
 Rankings of each album are determined on each of the above matrics.
-The overall ranking metric is the weighted average of the above 5 metric rankings with the following default weighting: 0.4,0.1,0.1,0.2,0.2
+The overall ranking metric is the weighted average of the above 5 metric rankings with the following default weighting: 0.4,0.2,0.05,0.3,0.1
 This weighting upweights stone cold classics and overall quality of the album based on percentages.
 
 The final ranking is based on the overall ranking metrics.

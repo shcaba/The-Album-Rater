@@ -1,9 +1,10 @@
-library(shiny)
-library(bslib)
-library(DT)
-library(readr)
-library(plotly)
-library(shinyWidgets)
+require(shiny)
+require(bslib)
+require(DT)
+require(readr)
+require(plotly)
+require(shinyWidgets)
+require(shinycssloaders)
 
 ui <- function(request) {
   shinyUI(fluidPage(
@@ -11,8 +12,8 @@ ui <- function(request) {
   tags$style(HTML(".dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
                     color: #ffffff")),
   
-  #setBackgroundImage(src = "album.jpg"),
-  setBackgroundImage(src = "https://hediscount.ru/product/276214062134"), 
+  setBackgroundImage(src = "album"),
+  #setBackgroundImage(src = "https://hediscount.ru/product/276214062134"), 
   
   column(width = 12, class = "well",
   titlePanel("The Album Rater"),
@@ -31,12 +32,12 @@ sidebarLayout(
       column(width = 6, numericInput("wtMedian", "Median score", value = 0.4, min = 0, max = 1, step = 0.001))
     ),
     fluidRow(
-      column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.1, min = 0, max = 1, step = 0.001)),
-      column(width = 6, numericInput("wt8plus", "Number >= 8",  value = 0.1, min = 0, max = 1, step = 0.00001))
+      column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.2, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wt8plus", "Number >= 8",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
     fluidRow(
-      column(width = 6, numericInput("wtper10", "% 10s",  value = 0.2, min = 0, max = 1, step = 0.001)),
-      column(width = 6, numericInput("wtper8plus", "% >=8",  value = 0.2, min = 0, max = 1, step = 0.00001))
+      column(width = 6, numericInput("wtper10", "% 10s",  value = 0.25, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wtper8plus", "% >=8",  value = 0.1, min = 0, max = 1, step = 0.00001))
     ),
     
     br(),
@@ -58,17 +59,17 @@ sidebarLayout(
       
       tabPanel("Album rankings",
 #        h4("Album rankings. These are sortable by metric."),
-        tableOutput("ranking_table"),
+        withSpinner(tableOutput("ranking_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
         downloadButton('download_table',"Download the album rankings"),
         br(),
         br(),
-        tableOutput("artist_table"),
+        withSpinner(tableOutput("artist_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
         downloadButton('download_artist_table',"Download the artist metrics"),
         br(),
         br(),
         h4("Final ranking compared to the ranking metric."),
         h5("Color indicate the clusterings based on each ranking metric, not the overall final ranking"),
-        plotlyOutput("Comp_rank_plot")
+        withSpinner(plotlyOutput("Comp_rank_plot"),image="zootrope.gif",image.height = "100px",image.width = "100px"),
       ),
   
       tabPanel("Between scorer comparisons",
