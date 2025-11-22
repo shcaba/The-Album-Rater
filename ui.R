@@ -34,7 +34,7 @@ sidebarLayout(
     
     h3("Choose the ranking weights"),
     fluidRow(
-      column(width = 6, numericInput("wtMedian", "Median score", value = 0.4, min = 0, max = 1, step = 0.001))
+      column(width = 6, numericInput("wtMean", "Mean score", value = 0.4, min = 0, max = 1, step = 0.001))
     ),
     fluidRow(
       column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.25, min = 0, max = 1, step = 0.001)),

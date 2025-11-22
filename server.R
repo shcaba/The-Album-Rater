@@ -67,14 +67,14 @@ function(input, output, session) {
     albums.list<-albums.list.out()
     
     #Caluculate scores
-    medians<-apply(albums.list$Tracks,2,median,na.rm=TRUE)
+    means<-round(apply(albums.list$Tracks,2,mean,na.rm=TRUE),2)
     tens<-colSums(albums.list$Tracks==10,na.rm=TRUE)
     eigh2ten<-colSums(albums.list$Tracks>=8,na.rm=TRUE)
     numtracks<-colSums(albums.list$Tracks>0,na.rm=TRUE)
     tens_per<-round(tens/numtracks,2)
     eigh2ten_per<-round(eigh2ten/numtracks,2)
-    all.metrics<-rbind(medians,tens,eigh2ten,tens_per,eigh2ten_per)
-    rownames(all.metrics)<-c("Medians","Tens","8plus","Tens_pct","8plus_pct")
+    all.metrics<-rbind(means,tens,eigh2ten,tens_per,eigh2ten_per)
+    rownames(all.metrics)<-c("Means","Tens","8plus","Tens_pct","8plus_pct")
     colnames(all.metrics)<-albums.list$Album
     all.metrics
   })    
@@ -98,20 +98,20 @@ function(input, output, session) {
 #    eigh2ten.rank<-rank(-eigh2ten,ties.method= "min")
 #    tens_per.rank<-rank(-tens_per,ties.method= "min")
 #    eigh2ten_per.rank<-rank(-eigh2ten_per,ties.method= "min")
-    medians.rank<-rank(-all.metrics.out()[1,],ties.method= "min")
+    means.rank<-rank(-all.metrics.out()[1,],ties.method= "min")
     tens.rank<-rank(-all.metrics.out()[2,],ties.method= "min")
     eigh2ten.rank<-rank(-all.metrics.out()[3,],ties.method= "min")
     tens_per.rank<-rank(-all.metrics.out()[4,],ties.method= "min")
     eigh2ten_per.rank<-rank(-all.metrics.out()[5,],ties.method= "min")
     
-    all.ranks<-rbind(medians.rank,tens.rank,eigh2ten.rank,tens_per.rank,eigh2ten_per.rank)
+    all.ranks<-rbind(means.rank,tens.rank,eigh2ten.rank,tens_per.rank,eigh2ten_per.rank)
     colnames(all.ranks)<-albums.list$Album
     all.ranks
   })  
   
   rank_score.out<-reactive({
     req(allranks.out())
-    rank.wt<-c(input$wtMedian,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
+    rank.wt<-c(input$wtMean,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
     rank.wt<-rank.wt/sum(rank.wt)
     rank.score<-colSums(allranks.out()*rank.wt)
     rank.score
@@ -135,7 +135,7 @@ function(input, output, session) {
     
     rank.table<-data.frame(cbind(t(all.ranks),t(all.metrics)))
     rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=final.rank,Rank_score=rank.score,rank.table)
-    colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Median rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Median","10s","8+","% 10s","% 8+")
+    colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Mean rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Mean","10s","8+","% 10s","% 8+")
     rank.table%>%
       arrange(`Final rank`)
     rank.table
@@ -184,7 +184,7 @@ function(input, output, session) {
     score.out.df<-do.call(rbind, score.out.list)
     summary.out<-score.out.df %>%
       group_by(Artist) %>%
-      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE)),Median=median(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
+      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE)),Mean=mean(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
     summary.out
   })
 
