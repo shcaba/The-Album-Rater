@@ -184,7 +184,7 @@ function(input, output, session) {
     score.out.df<-do.call(rbind, score.out.list)
     summary.out<-score.out.df %>%
       group_by(Artist) %>%
-      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE)),Mean=mean(Track_score,na.rm=TRUE),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
+      summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE),2),Median=round(median(Track_score,na.rm=TRUE)),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
     summary.out
   })
 
@@ -207,7 +207,7 @@ function(input, output, session) {
         title = "Artist summary",
         subtitle = ""
       ) %>%
-      data_color(columns = c(2:10), method = "auto", palette = "viridis", reverse=TRUE) |>
+      data_color(columns = c(2:ncol(artist.summary.out())), method = "auto", palette = "viridis", reverse=TRUE) |>
       tab_style(style = list(cell_text(weight = "bold")),
                 locations = cells_body(columns = c(Artist,Ntracks))) %>%
       opt_interactive(use_search = TRUE,
