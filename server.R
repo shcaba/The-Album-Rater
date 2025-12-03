@@ -179,12 +179,29 @@ function(input, output, session) {
 #Create artist summary
   artist.summary.out<-reactive({
     req(albums.list.out())
+    #browser()
     albums.list<-albums.list.out()
     score.out.list<-mapply(function(x) data.frame(Track_score=albums.list$Tracks[,x],Artist=albums.list$Artist[1,x]),x=1:length(albums.list$Artist),SIMPLIFY=FALSE)
     score.out.df<-do.call(rbind, score.out.list)
+    #Get Artist summaries
     summary.out<-score.out.df %>%
       group_by(Artist) %>%
       summarize(Ntracks=sum(Track_score>0,na.rm=TRUE),N_Tens=sum(Track_score==10,na.rm=TRUE),Pct_Tens=round(sum(Track_score==10,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),N_8plus=sum(Track_score>=8,na.rm=TRUE),Pct_8plus=round(sum(Track_score>=8,na.rm=TRUE)/sum(Track_score>0,na.rm=TRUE),2),Mean=round(mean(Track_score,na.rm=TRUE),2),Median=round(median(Track_score,na.rm=TRUE)),q5=quantile(Track_score,probs=0.05,na.rm=TRUE),q95=quantile(Track_score,probs=0.95,na.rm=TRUE))
+
+    #Get median ranks
+    rank.df<-data.frame(Artist=rank.table()$Artist,Rank=rank.table()$'Final rank')
+    rank.out<-rank.df%>%
+      group_by(Artist) %>%
+      summarize(Median_rank=round(median(Rank,na.rm=TRUE),2))
+    
+    rank.wt<-c(input$wtMean,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
+    rank.wt<-rank.wt/sum(rank.wt)
+    artist.rank<-rank(rowSums(cbind(rank(summary.out$Mean,ties.method= "min"),
+      rank(summary.out$N_Tens,ties.method= "min"),
+      rank(summary.out$N_8plus,ties.method= "min"),
+      rank(summary.out$Pct_Tens,ties.method= "min"),
+      rank(summary.out$Pct_8plus,ties.method= "min"))*rank.wt),ties.method= "min")   
+    
     summary.out
   })
 
