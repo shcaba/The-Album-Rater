@@ -4,7 +4,7 @@ require(Kmedians)
 require(tidyverse)
 require(gt)
 require(shinycssloaders)
-#require(wesanderson)
+require(wesanderson)
 
 function(input, output, session) {
   output$download_csv <- downloadHandler(
