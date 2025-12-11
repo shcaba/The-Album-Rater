@@ -5,6 +5,8 @@ require(tidyverse)
 require(gt)
 require(shinycssloaders)
 require(wesanderson)
+require(shinybusy)
+require(shinyjs)
 
 function(input, output, session) {
   output$download_csv <- downloadHandler(
@@ -18,7 +20,7 @@ function(input, output, session) {
   )  
   
   
-  observeEvent(input$run_rankings,{
+  observeEvent(input$file,{
     # Reactive value to store the uploaded data
     data <- reactive({
     req(input$file)
@@ -83,7 +85,7 @@ function(input, output, session) {
     req(albums.list.out(),all.metrics.out())
 
     albums.list<-albums.list.out()
-#    #Caluculate scores
+#    #Calculate scores
 #    medians<-apply(albums.list$Tracks,2,median,na.rm=TRUE)
 #    tens<-colSums(albums.list$Tracks==10,na.rm=TRUE)
 #    eigh2ten<-colSums(albums.list$Tracks>=8,na.rm=TRUE)
@@ -134,7 +136,7 @@ function(input, output, session) {
     final.rank<-finalranks.out()
     
     rank.table<-data.frame(cbind(t(all.ranks),t(all.metrics)))
-    rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=final.rank,Rank_score=rank.score,rank.table)
+    rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=round(final.rank,2),Rank_score=rank.score,rank.table)
     colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Mean rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Mean","10s","8+","% 10s","% 8+")
     rank.table%>%
       arrange(`Final rank`)
@@ -238,7 +240,8 @@ function(input, output, session) {
       write.csv(rank.table(), fname)
     })
   
-    
+  
+  observeEvent(input$run_rankings,{
   # Render plot
   output$Comp_rank_plot <- renderPlotly({
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
@@ -280,5 +283,6 @@ function(input, output, session) {
     ggplotly(p,tooltip = c("x", "y", "album"))
     p
     })
+  })
   })
 }

@@ -51,7 +51,7 @@ sidebarLayout(
     h4("(Should be less than total number of albums, and usually 5 or less)"),
     numericInput("clust.in", "Number of clusters", value = 1, min = 1, max = 1000, step = 1),
 
-    actionButton("run_rankings", strong("Run Rankings"),
+    actionButton("run_rankings", strong("Run Clusters"),
                  width = "100%",
                  icon("circle-play"),
                  style = "font-size:120%;border:2px solid;color:#FFFFFF;background:#0388fc"
