@@ -49,8 +49,9 @@ function(input, output, session) {
    # return(!is.null(input$file))
   #})
   #outputOptions(output, "fileUploaded", suspendWhenHidden = FALSE)
-  
+
   albums.list.out<-reactive({
+    #browser()
     req(data())
     albums.dat=data()
     #Prep data
@@ -181,7 +182,6 @@ function(input, output, session) {
 #Create artist summary
   artist.summary.out<-reactive({
     req(albums.list.out())
-    #browser()
     albums.list<-albums.list.out()
     score.out.list<-mapply(function(x) data.frame(Track_score=albums.list$Tracks[,x],Artist=albums.list$Artist[1,x]),x=1:length(albums.list$Artist),SIMPLIFY=FALSE)
     score.out.df<-do.call(rbind, score.out.list)
@@ -196,13 +196,17 @@ function(input, output, session) {
       group_by(Artist) %>%
       summarize(Median_rank=round(median(Rank,na.rm=TRUE),2))
     
-    rank.wt<-c(input$wtMean,input$wttens,input$wt8plus,input$wtper10,input$wtper8plus)
+    rank.wt<-c(input$wtMean_artist,input$wttens_artist,input$wt8plus_artist,input$wtper10_artist,input$wtper8plus_artist)
     rank.wt<-rank.wt/sum(rank.wt)
-    artist.rank<-rank(rowSums(cbind(rank(summary.out$Mean,ties.method= "min"),
-      rank(summary.out$N_Tens,ties.method= "min"),
-      rank(summary.out$N_8plus,ties.method= "min"),
-      rank(summary.out$Pct_Tens,ties.method= "min"),
-      rank(summary.out$Pct_8plus,ties.method= "min"))*rank.wt),ties.method= "min")   
+    #negative values used to rank the highest value as highest rank
+    artist.rank<-rank(rowSums(t(t(cbind(rank(-summary.out$Mean,ties.method= "min"),
+      rank(-summary.out$N_Tens,ties.method= "min"),
+      rank(-summary.out$N_8plus,ties.method= "min"),
+      rank(-summary.out$Pct_Tens,ties.method= "min"),
+      rank(-summary.out$Pct_8plus,ties.method= "min")))*rank.wt)),ties.method= "min")   
+    
+    summary.out<-cbind(summary.out[,1],artist.rank,rank.out[,2],summary.out[,2:ncol(summary.out)])
+    colnames(summary.out)[c(2,3)]<-c("Overall rank","Median rank")
     
     summary.out
   })

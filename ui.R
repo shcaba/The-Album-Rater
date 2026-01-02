@@ -27,22 +27,37 @@ ui <- function(request) {
 sidebarLayout(
   sidebarPanel(
     width=2,
-    h3("Choose file with song ratings."),
+    h3("Upload album scores"),
     
-    fileInput("file", "CSV File",
+    fileInput("file", "CSV file with song ratings",
               accept = c(".csv", ".CSV")),
     
-    h3("Choose the ranking weights"),
+    h3("Choose album ranking weights"),
     fluidRow(
       column(width = 6, numericInput("wtMean", "Mean score", value = 0.5, min = 0, max = 1, step = 0.001))
     ),
     fluidRow(
-      column(width = 6, numericInput("wttens", "Number of 10s",  value = 0.1, min = 0, max = 1, step = 0.001)),
-      column(width = 6, numericInput("wt8plus", "Number 8+",  value = 0.05, min = 0, max = 1, step = 0.00001))
+      column(width = 6, numericInput("wttens", "# of 10s",  value = 0.1, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wt8plus", "# 8+",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
     fluidRow(
       column(width = 6, numericInput("wtper10", "% 10s",  value = 0.2, min = 0, max = 1, step = 0.001)),
       column(width = 6, numericInput("wtper8plus", "% 8+",  value = 0.15, min = 0, max = 1, step = 0.00001))
+    ),
+    
+    br(),
+
+    h3("Choose artist ranking weights"),
+    fluidRow(
+      column(width = 6, numericInput("wtMean_artist", "Mean score", value = 0.1, min = 0, max = 1, step = 0.001))
+    ),
+    fluidRow(
+      column(width = 6, numericInput("wttens_artist", "# of 10s",  value = 0.4, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wt8plus_artist", "# 8+",  value = 0.35, min = 0, max = 1, step = 0.00001))
+    ),
+    fluidRow(
+      column(width = 6, numericInput("wtper10_artist", "% 10s",  value = 0.1, min = 0, max = 1, step = 0.001)),
+      column(width = 6, numericInput("wtper8plus_artist", "% 8+",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
     
     br(),
