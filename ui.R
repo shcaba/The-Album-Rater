@@ -88,6 +88,7 @@ sidebarLayout(
         br(),
         br(),
         withSpinner(plotlyOutput("years_summary_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+        withSpinner(plotlyOutput("years_summary_per_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
         br(),
         br(),
         h4("Final ranking compared to the ranking metric."),

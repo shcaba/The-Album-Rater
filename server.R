@@ -7,6 +7,7 @@ require(shinycssloaders)
 require(wesanderson)
 require(shinybusy)
 require(shinyjs)
+require(reshape2)
 
 function(input, output, session) {
   output$download_csv <- downloadHandler(
@@ -134,8 +135,8 @@ function(input, output, session) {
     final.rank<-finalranks.out()
     
     rank.table<-data.frame(cbind(t(all.ranks),t(all.metrics)))
-    rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Final_rank=round(final.rank,2),Rank_score=rank.score,rank.table)
-    colnames(rank.table)<-c("Artist","Album","Final rank","Rank score","Mean rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Mean","10s","8+","% 10s","% 8+")
+    rank.table<-data.frame(Artist=t(albums.list$Artist),Album=t(albums.list$Album),Year=t(albums.list$Year),Final_rank=round(final.rank,2),Rank_score=rank.score,rank.table)
+    colnames(rank.table)<-c("Artist","Album","Year","Final rank","Rank score","Mean rank","10s rank","8+ rank","% 10s rank","% 8+ rank","Mean","10s","8+","% 10s","% 8+")
     rank.table%>%
       arrange(`Final rank`)
     rank.table
@@ -160,7 +161,7 @@ function(input, output, session) {
         title = "Album rankings and rankings metrics",
         subtitle = ""
       ) %>%
-      data_color(columns = c(3:14), method = "auto", palette = "viridis", reverse=TRUE) |>
+      data_color(columns = c(4:15), method = "auto", palette = "viridis", reverse=TRUE) |>
       tab_style(style = list(cell_text(weight = "bold")),
                 locations = cells_body(columns = c(Album,`Final rank`))) %>%
       opt_interactive(use_search = TRUE,
@@ -242,21 +243,84 @@ function(input, output, session) {
     })
   
   
-  output$years_summary_plot<-renderPlotly({
+  years.summary.out<-reactive({
     req(albums.list.out(),all.metrics.out())
     albums.list<-albums.list.out()
     all.metrics<-all.metrics.out()
-    #browser()
-    all.metrics.10<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[2,]),Metric="10s")
-    all.metrics.8<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[3,]),Metric="8+")
-    all.metrics.10.8<-rbind(all.metrics.10,all.metrics.8)
     
-    p<-ggplot(all.metrics.10.8,aes(Year,Number,fill=Metric))+
-      geom_col()
+    ##Numbers
+    #Make initial numbers data frames for all year entries
+    all.metrics.10<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[2,]))
+    all.metrics.8<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[3,]))
+    #all.metrics.10.8<-rbind(all.metrics.10,all.metrics.8)
+    
+    #Sum across all year entries to get a total for each year and metric
+    Year.numbers.10<-reshape2::dcast(all.metrics.10,Year~1,sum)
+    Year.numbers.8<-reshape2::dcast(all.metrics.8,Year~1,sum)
+    #Prepare for plot
+    Year.numbers.10.df<-data.frame("Year"=as.numeric(Year.numbers.10[,1]),"Number"=as.numeric(Year.numbers.10[,2]),Metric="10s")
+    Year.numbers.8.df<-data.frame("Year"=as.numeric(Year.numbers.8[,1]),"Number"=as.numeric(Year.numbers.8[,2]),Metric="8+")
+    Year.numbers.10.8<-rbind(Year.numbers.10.df,Year.numbers.8.df)
+    
+    ##Percent
+    #Make initial percent data frames for all year entries
+    all.metrics.10per<-data.frame("Year"=as.numeric(albums.list$Years),"Percent"=as.numeric(all.metrics[4,]))
+    all.metrics.8per<-data.frame("Year"=as.numeric(albums.list$Years),"Percent"=as.numeric(all.metrics[5,]))
+    #all.metrics.10.8<-rbind(all.metrics.10,all.metrics.8)
+    
+    #Sum across all year entries to summary a total for each year and metric
+    Year.percent.10<-reshape2::dcast(all.metrics.10per,Year~1,sum)
+    Year.percent.8<-reshape2::dcast(all.metrics.8per,Year~1,sum)
+    #Prepare for plot
+    Year.percent.10.df<-data.frame("Year"=as.numeric(Year.percent.10[,1]),"Percent"=as.numeric(Year.percent.10[,2]),Metric="%10s")
+    Year.percent.8.df<-data.frame("Year"=as.numeric(Year.percent.8[,1]),"Percent"=as.numeric(Year.percent.8[,2]),Metric="%8+")
+    Year.percent.10.8<-rbind(Year.percent.10.df,Year.percent.8.df)
+    #browser()
+    #Total albums and songs per year
+    years.albums<-table(as.numeric(albums.list$Years))
+    years.tracks<-mapply(function(x) sum(table(albums.list$Tracks[,x])),x=1:ncol(albums.list$Tracks),SIMPLIFY=TRUE)
+    years.tracks<-data.frame(Year=as.numeric(albums.list$Years),Tracks=as.numeric(years.tracks))
+    years.tracks<-dcast(years.tracks,Year~1,sum)
+    years.albums.tracks<-data.frame(Year=as.numeric(names(years.albums)),Num_albums=as.numeric(years.albums),Num_tracks=as.numeric(years.tracks[,2]))
+    
+    Years.info.ls<-list()
+    Years.info.ls[[1]]<-Year.numbers.10.8
+    Years.info.ls[[2]]<-Year.percent.10.8
+    Years.info.ls[[3]]<-years.albums.tracks
+    Years.info.ls  
+  })
+  
+  output$years_summary_plot<-renderPlotly({
+    req(years.summary.out())
+    years.summary.out<-years.summary.out()
+    req(albums.list.out(),all.metrics.out())
+
+    fill.in<-wes_palette(2,name="Moonrise2",type="discrete")
+    
+    p<-ggplot(years.summary.out[[1]],aes(Year,Number,fill=Metric))+
+      geom_col()+
+#      geom_text(aes(label = years.summary.out[[1]]$Num_tracks), vjust = -0.5)+
+      scale_fill_manual(values=fill.in)+
+      theme_bw()
+      
+    ggplotly(p)
+  })
+
+  output$years_summary_per_plot<-renderPlotly({
+    req(years.summary.out())
+    years.summary.out<-years.summary.out()
+
+    fill.in<-wes_palette(2,name="FrenchDispatch",type="discrete")
+    
+    p<-ggplot(years.summary.out[[2]],aes(Year,Percent,fill=Metric))+
+      geom_col()+
+      scale_fill_manual(values=fill.in)+
+      theme_bw()
     
     ggplotly(p)
   })
   
+      
   observeEvent(input$run_rankings,{
   # Render cluster plot
   output$Comp_rank_plot <- renderPlotly({
