@@ -47,14 +47,16 @@ function(input, output, session) {
     #albums.list[[1]]<-albums.dat[1,c(-1)]
     #albums.list[[2]]<-albums.dat[2,c(-1)]
     albums.list[[3]]<-as.data.frame(sapply(albums.dat[4:nrow(albums.dat),-1],as.numeric)) #Turn characters into numeric
+    albums.list[[4]]<-albums.dat[3,c(-1,-2)]
     
     #rownames(albums.list[[3]])<-albums.dat[4:nrow(albums.dat),1]
     
     tracknums<-c(1:dim(albums.list[[3]])[1])
+    #tracknums<-albums.list[[3]][,1]
     albums.list[[3]]<-albums.list[[3]][,-1]
     rownames(albums.list[[3]])<-tracknums
     
-    names(albums.list)<-c("Artist","Album","Tracks")
+    names(albums.list)<-c("Artist","Album","Tracks","Years")
     albums.list
   })
   
@@ -240,8 +242,23 @@ function(input, output, session) {
     })
   
   
+  output$years_summary_plot<-renderPlotly({
+    req(albums.list.out(),all.metrics.out())
+    albums.list<-albums.list.out()
+    all.metrics<-all.metrics.out()
+    #browser()
+    all.metrics.10<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[2,]),Metric="10s")
+    all.metrics.8<-data.frame("Year"=as.numeric(albums.list$Years),"Number"=as.numeric(all.metrics[3,]),Metric="8+")
+    all.metrics.10.8<-rbind(all.metrics.10,all.metrics.8)
+    
+    p<-ggplot(all.metrics.10.8,aes(Year,Number,fill=Metric))+
+      geom_col()
+    
+    ggplotly(p)
+  })
+  
   observeEvent(input$run_rankings,{
-  # Render plot
+  # Render cluster plot
   output$Comp_rank_plot <- renderPlotly({
     req(allranks.out(),albums.list.out(),rank_score.out(),finalranks.out())
     albums.list<-albums.list.out()
