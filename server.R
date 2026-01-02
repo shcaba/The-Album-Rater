@@ -34,32 +34,26 @@ function(input, output, session) {
     })
   })
   
-  # Update variable choices when data is loaded
-#  observe({
-#    req(data())
-#    numeric_vars <- names(select_if(data(), is.numeric))
-#    all_vars <- names(data())
-    
-#    updateSelectInput(session, "x_var", choices = all_vars)
-#    updateSelectInput(session, "y_var", choices = numeric_vars)
-#  })
-  
-  # Output to check if file is uploaded (for conditional panel)
-  #output$fileUploaded <- reactive({
-   # return(!is.null(input$file))
-  #})
-  #outputOptions(output, "fileUploaded", suspendWhenHidden = FALSE)
 
   albums.list.out<-reactive({
-    #browser()
     req(data())
-    albums.dat=data()
+    #browser()
+    #albums.dat=data.frame(data())
+    albums.dat=data.frame(t(data()))
     #Prep data
     albums.list<-list()
-    albums.list[[1]]<-albums.dat[1,-1]
-    albums.list[[2]]<-albums.dat[2,-1]
+    albums.list[[1]]<-albums.dat[1,c(-1,-2)]
+    albums.list[[2]]<-albums.dat[2,c(-1,-2)]
+    #albums.list[[1]]<-albums.dat[1,c(-1)]
+    #albums.list[[2]]<-albums.dat[2,c(-1)]
     albums.list[[3]]<-as.data.frame(sapply(albums.dat[4:nrow(albums.dat),-1],as.numeric)) #Turn characters into numeric
-    rownames(albums.list[[3]])<-albums.dat[4:nrow(albums.dat),1]
+    
+    #rownames(albums.list[[3]])<-albums.dat[4:nrow(albums.dat),1]
+    
+    tracknums<-c(1:dim(albums.list[[3]])[1])
+    albums.list[[3]]<-albums.list[[3]][,-1]
+    rownames(albums.list[[3]])<-tracknums
+    
     names(albums.list)<-c("Artist","Album","Tracks")
     albums.list
   })
@@ -68,7 +62,7 @@ function(input, output, session) {
   all.metrics.out<-reactive({
     req(albums.list.out())
     albums.list<-albums.list.out()
-    
+    #browser()
     #Caluculate scores
     means<-round(apply(albums.list$Tracks,2,mean,na.rm=TRUE),2)
     tens<-colSums(albums.list$Tracks==10,na.rm=TRUE)
@@ -78,6 +72,7 @@ function(input, output, session) {
     eigh2ten_per<-round(eigh2ten/numtracks,2)
     all.metrics<-rbind(means,tens,eigh2ten,tens_per,eigh2ten_per)
     rownames(all.metrics)<-c("Means","Tens","8plus","Tens_pct","8plus_pct")
+    #colnames(all.metrics)<-albums.list$Album
     colnames(all.metrics)<-albums.list$Album
     all.metrics
   })    
@@ -254,7 +249,7 @@ function(input, output, session) {
     all.ranks<-allranks.out()
     rank.score<-rank_score.out()
     final.rank<-finalranks.out()
-    #browser()
+    
     #Cluster analysis
    if(length(final.rank)>input$clust.in & input$clust.in>1)
     {
