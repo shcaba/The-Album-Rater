@@ -262,44 +262,52 @@ function(input, output, session) {
     Year.numbers.8.df<-data.frame("Year"=as.numeric(Year.numbers.8[,1]),"Number"=as.numeric(Year.numbers.8[,2]),Metric="8+")
     Year.numbers.10.8<-rbind(Year.numbers.10.df,Year.numbers.8.df)
     
-    ##Percent
-    #Make initial percent data frames for all year entries
-    all.metrics.10per<-data.frame("Year"=as.numeric(albums.list$Years),"Percent"=as.numeric(all.metrics[4,]))
-    all.metrics.8per<-data.frame("Year"=as.numeric(albums.list$Years),"Percent"=as.numeric(all.metrics[5,]))
-    #all.metrics.10.8<-rbind(all.metrics.10,all.metrics.8)
     
-    #Sum across all year entries to summary a total for each year and metric
-    Year.percent.10<-reshape2::dcast(all.metrics.10per,Year~1,sum)
-    Year.percent.8<-reshape2::dcast(all.metrics.8per,Year~1,sum)
-    #Prepare for plot
-    Year.percent.10.df<-data.frame("Year"=as.numeric(Year.percent.10[,1]),"Percent"=as.numeric(Year.percent.10[,2]),Metric="%10s")
-    Year.percent.8.df<-data.frame("Year"=as.numeric(Year.percent.8[,1]),"Percent"=as.numeric(Year.percent.8[,2]),Metric="%8+")
-    Year.percent.10.8<-rbind(Year.percent.10.df,Year.percent.8.df)
-    #browser()
     #Total albums and songs per year
     years.albums<-table(as.numeric(albums.list$Years))
     years.tracks<-mapply(function(x) sum(table(albums.list$Tracks[,x])),x=1:ncol(albums.list$Tracks),SIMPLIFY=TRUE)
     years.tracks<-data.frame(Year=as.numeric(albums.list$Years),Tracks=as.numeric(years.tracks))
-    years.tracks<-dcast(years.tracks,Year~1,sum)
+    years.tracks<-reshape2::dcast(years.tracks,Year~1,sum)
     years.albums.tracks<-data.frame(Year=as.numeric(names(years.albums)),Num_albums=as.numeric(years.albums),Num_tracks=as.numeric(years.tracks[,2]))
+    # Year.numbers.10.8$Year_albums=rep(years.albums.tracks$Num_albums,2)
+    # Year.numbers.10.8$Year_tracks=rep(years.albums.tracks$Num_tracks,2)
+    Year.numbers.10.8$Year_albums=years.albums.tracks$Num_albums
+    Year.numbers.10.8$Year_tracks=years.albums.tracks$Num_tracks
+
+    ##Percent
+    #Make initial percent data frames for all year entries
+    Year.percent.10.df<-Year.numbers.10.df
+    Year.percent.8.df<-Year.numbers.8.df
+    colnames(Year.percent.10.df)[2]<-colnames(Year.percent.8.df)[2]<-"Percent"
+    Year.percent.10.df$Percent<-Year.percent.10.df$Percent/years.albums.tracks$Num_tracks
+    Year.percent.8.df$Percent<-Year.percent.8.df$Percent/years.albums.tracks$Num_tracks
+    Year.percent.10.8<-rbind(Year.percent.10.df,Year.percent.8.df)
     
-    Years.info.ls<-list()
-    Years.info.ls[[1]]<-Year.numbers.10.8
-    Years.info.ls[[2]]<-Year.percent.10.8
-    Years.info.ls[[3]]<-years.albums.tracks
-    Years.info.ls  
+    Year.metrics.10.8<-data.frame(Year=Year.numbers.10.8$Year,
+                                  Number=Year.numbers.10.8$Number,
+                                  Percent=Year.percent.10.8$Percent,
+                                  Metric=Year.numbers.10.8$Metric,
+                                  Num_albums=Year.numbers.10.8$Year_albums,
+                                  Num_tracks=Year.numbers.10.8$Year_tracks)
+
+#    Years.info.ls<-list()
+#    Years.info.ls[[1]]<-Year.numbers.10.8
+#    Years.info.ls[[2]]<-Year.percent.10.8
+#    Years.info.ls[[3]]<-years.albums.tracks
+#    Years.info.ls  
   })
   
   output$years_summary_plot<-renderPlotly({
     req(years.summary.out())
     years.summary.out<-years.summary.out()
-    req(albums.list.out(),all.metrics.out())
-
+#browser()
     fill.in<-wes_palette(2,name="Moonrise2",type="discrete")
+    Total.metric<-subset(years.summary.out,Metric=="8+")$Number
     
-    p<-ggplot(years.summary.out[[1]],aes(Year,Number,fill=Metric))+
-      geom_col()+
-#      geom_text(aes(label = years.summary.out[[1]]$Num_tracks), vjust = -0.5)+
+    p<-ggplot(years.summary.out,aes(Year,Number,fill=Metric))+
+      geom_col(position="dodge")+
+      #geom_text(aes(label = Year_tracks))+
+      annotate("text",x=unique(years.summary.out$Year),y=round(Total.metric+Total.metric*0.05),label=Total.metric,size = 8/.pt)+
       scale_fill_manual(values=fill.in)+
       theme_bw()
       
@@ -311,16 +319,25 @@ function(input, output, session) {
     years.summary.out<-years.summary.out()
 
     fill.in<-wes_palette(2,name="FrenchDispatch",type="discrete")
-    
-    p<-ggplot(years.summary.out[[2]],aes(Year,Percent,fill=Metric))+
-      geom_col()+
+
+    p<-ggplot(years.summary.out,aes(Year,Percent,fill=Metric))+
+      geom_col(position="dodge")+
+#      annotate("text",x=years.summary.out[[3]]$Year,y=Total.metric+Total.metric*0.05,label=years.summary.out[[3]]$Num_tracks,size = 8/.pt)+
       scale_fill_manual(values=fill.in)+
       theme_bw()
     
     ggplotly(p)
   })
   
-      
+  
+  output$download_year_info <- downloadHandler(
+    filename = function(){"year_metrics.csv"}, 
+    content = function(fname){
+      write.csv(years.summary.out(), fname)
+    })
+  
+  
+        
   observeEvent(input$run_rankings,{
   # Render cluster plot
   output$Comp_rank_plot <- renderPlotly({

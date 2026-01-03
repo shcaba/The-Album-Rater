@@ -89,6 +89,8 @@ sidebarLayout(
         br(),
         withSpinner(plotlyOutput("years_summary_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
         withSpinner(plotlyOutput("years_summary_per_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+        h5("Number above bars are the total tracks evaluate within the given year."),
+        downloadButton('download_year_info',"Download the year metrics"),
         br(),
         br(),
         h4("Final ranking compared to the ranking metric."),
