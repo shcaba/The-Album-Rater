@@ -17,6 +17,7 @@ ui <- function(request) {
   column(width = 12, class = "well",
   titlePanel("The Album Rater"),
   h4(p("This tool ranks albums from your individual song ratings.")),
+  h4(p("It will also provide artist rankings and summary metrics for the years of the albums.")),
   h4(p("This is an objective album ranking taken from subjective song ratings.")),
   downloadLink(
     "download_csv",
@@ -32,6 +33,7 @@ sidebarLayout(
     fileInput("file", "CSV file with song ratings",
               accept = c(".csv", ".CSV")),
     
+    conditionalPanel(condition="input.tabselected==1",
     h3("Choose album ranking weights"),
     fluidRow(
       column(width = 6, numericInput("wtMean", "Mean score", value = 0.5, min = 0, max = 1, step = 0.001))
@@ -44,9 +46,9 @@ sidebarLayout(
       column(width = 6, numericInput("wtper10", "% 10s",  value = 0.2, min = 0, max = 1, step = 0.001)),
       column(width = 6, numericInput("wtper8plus", "% 8+",  value = 0.15, min = 0, max = 1, step = 0.00001))
     ),
+    ),
     
-    br(),
-
+    conditionalPanel(condition="input.tabselected==2",
     h3("Choose artist ranking weights"),
     fluidRow(
       column(width = 6, numericInput("wtMean_artist", "Mean score", value = 0.1, min = 0, max = 1, step = 0.001))
@@ -59,9 +61,9 @@ sidebarLayout(
       column(width = 6, numericInput("wtper10_artist", "% 10s",  value = 0.1, min = 0, max = 1, step = 0.001)),
       column(width = 6, numericInput("wtper8plus_artist", "% 8+",  value = 0.05, min = 0, max = 1, step = 0.00001))
     ),
+    ),
     
-    br(),
-
+    conditionalPanel(condition="input.tabselected==3",
     h3("Choose the number of album clusters to show on plot"),
     h4("(Should be less than total number of albums, and usually 5 or less)"),
     numericInput("clust.in", "Number of clusters", value = 1, min = 1, max = 1000, step = 1),
@@ -72,34 +74,42 @@ sidebarLayout(
                  style = "font-size:120%;border:2px solid;color:#FFFFFF;background:#0388fc"
     )
   ),
+  ),
 
   mainPanel(
     tabsetPanel(
-      id = "tabs",    
+      id = "tabselected",    
       
       tabPanel("Album rankings",
-#        h4("Album rankings. These are sortable by metric."),
-        withSpinner(tableOutput("ranking_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
-        downloadButton('download_table',"Download the album rankings"),
-        br(),
-        br(),
-        withSpinner(tableOutput("artist_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
-        downloadButton('download_artist_table',"Download the artist metrics"),
-        br(),
-        br(),
-        withSpinner(plotlyOutput("years_summary_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
-        withSpinner(plotlyOutput("years_summary_per_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
-        h5("Number above bars are the total tracks evaluate within the given year."),
-        downloadButton('download_year_info',"Download the year metrics"),
-        br(),
-        br(),
-        h4("Final ranking compared to the ranking metric."),
-        h5("Color indicate the clusterings based on each ranking metric, not the overall final ranking"),
-        withSpinner(plotlyOutput("Comp_rank_plot"),image="zootrope.gif",image.height = "100px",image.width = "100px"),
+               value=1,
+        #        h4("Album rankings. These are sortable by metric."),
+               withSpinner(tableOutput("ranking_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+               downloadButton('download_table',"Download the album rankings"),
       ),
   
-      tabPanel("Between scorer comparisons",
-      )
+        tabPanel("Artist rankings",
+                 value=2,
+                 withSpinner(tableOutput("artist_table"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+                 downloadButton('download_artist_table',"Download the artist metrics"),
+          ),
+
+        tabPanel("Year summary",
+                 withSpinner(plotlyOutput("years_summary_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+                 withSpinner(plotlyOutput("years_summary_per_plot"),image="spinning-record.gif",image.height = "100px",image.width = "100px"),
+                 h5("Number above bars are the total tracks evaluate within the given year."),
+                 downloadButton('download_year_info',"Download the year metrics"),
+        ),
+
+        tabPanel("Cluster analysis",
+                 value=3,
+                 h4("Final ranking compared to the ranking metric."),
+                 h5("Color indicate the clusterings based on each ranking metric, not the overall final ranking"),
+                 withSpinner(plotlyOutput("Comp_rank_plot"),image="zootrope.gif",image.height = "100px",image.width = "100px"),
+        ),
+
+        tabPanel("Between scorer comparisons",
+                 h4("Coming soon"),
+        )
     ),
      width=10
    )
