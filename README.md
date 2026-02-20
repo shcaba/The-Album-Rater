@@ -73,12 +73,11 @@ This weighting upweights stone cold classics and overall quality of the album ba
 The final ranking is based on the overall weighted ranking metrics.
 
 # Ranking outputs
-A table of each metric ranking, the ranking score and overall rankings are provided in a sortable table.
-A second table provides a summary score for each band or artist submitted.
+* A table of each metric ranking, the ranking score and overall rankings are provided in a sortable table. You can also run a Kmedians cluster analysis (using the 5 metrics) with different colors showing groups of albums with similar scores (the number of clusters is user chosen). This gets away from pure ranking an allows for a tiered approach to evalutaing albums status. If there are major deviations from the one-to-one line, then it may show the albums are more similarly ranked than the final rankings show.
+* A second table in the "Artist Rankings" tab provides a summary score for each band or artist submitted.
+* A third summary of high quality (8+) songs score across years (both in number of songs and percent of songs) is provided in the "Year summary" tab.
+* A fourth tab, allowing comparisons of rankings between users, is still in development.
 
-A comparison plot is also provided comparing the ovearll ranking with the ranking metrics. If this follows the one-to-one line, then there is a clear differentitaion among the compared albums.
-If there are major deviations from the one-to-one line, then it may show the albums are more similarly ranked than the final rankings show.
-A cluster analysis is performed using the Kmedians package to look for clustering of ranks among the 5 metrics. Point colors show the user defined number of distinct clusters found via the k-medians cluster approach. 
 
 # Additional explorations
 A variety of other explorations can be made with the output:
