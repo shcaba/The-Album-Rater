@@ -1,0 +1,13 @@
+name: The-Album-Rater
+title: The-Album-Rater
+username: shcaba
+account: shcaba
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16727953
+bundleId: 11609288
+url: https://shcaba.shinyapps.io/The-Album-Rater/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .history/Album_rankings_II_20260101173653.csv|.history/Album_rankings_II_20260101173827.csv|Album_rankings.csv|Album_rankings_jmc.csv|Album_rankings_jmc_1robyn.csv|Example code.R|spreadsheet version/Album rater.xlsx
