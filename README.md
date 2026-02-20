@@ -22,7 +22,7 @@ if (any(installed_packages == FALSE)) {
 
 # Running the The Album Rater on the internet
 
-The easiest way to run the app is to click on [https://shcaba.shinyapps.io/The-Album-Rater/](https://github.com/shcaba/The-Album-Rater)
+The easiest way to run the app is to click on [https://shcaba.shinyapps.io/The-Album-Rater/](https://shcaba.shinyapps.io/The-Album-Rater/)
 
 
 # Running the The Album Rater on your local machine
