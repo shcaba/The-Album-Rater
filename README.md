@@ -26,17 +26,17 @@ Running the tool can be accomplished in the following way:
 
 1. Access the repository [The-Album-Rater](https://github.com/shcaba/The-Album-Rater)
 
- - In "< > Code" Download the ZIP file
+ - In the green "< > Code" button, download the ZIP file.
 
 
 2. Extract the folder **The-Album-Rater-master** and open the ui.r and/or server.r files in RStudio and push the "`Run App`" button 
 
 I recommend using the "`Run External`" option within the "`Run App`" button 
-(see small arrow in button to change options)
+(see small arrow in button to change options).
 
-3. A window should open with the Shiny app running
+3. After hitting the "`Run App`" button, a window should open with the Shiny app running.
 
-4. If this is the first time running the app, you should download an the example ratings file (just below the heading text)
+4. If this is the first time running the app, you should download an the example ratings file (just below the heading text).
 
 5. If you already have your ratings file scored (see rating system below), upload it to the tool and wait for record to stop spinning.
 
